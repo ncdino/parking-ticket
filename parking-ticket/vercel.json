@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/app.py"
+    }
+  ],
+  "files": [
+    "api/output.csv"
+  ]
+}

@@ -1,16 +1,18 @@
 // components/MainPage.js
 "use client";
 
-import { useState, useEffect } from "react";
-import MapComponent from "./MapComponent";
-import CameraInfo from "./CameraInfo";
+import dynamic from 'next/dynamic';
+import { useState, useEffect } from 'react';
+
+const MapComponent = dynamic(() => import('./MapComponent'), { ssr: false });
+const CameraInfo = dynamic(() => import('./CameraInfo'), { ssr: false });
 
 export default function MainPage() {
   const [userLocation, setUserLocation] = useState(null);
   const [selectedNote, setSelectedNote] = useState(""); // 선택된 카메라 정보
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       // 첫 위치를 가져옴
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -20,7 +22,7 @@ export default function MainPage() {
           });
         },
         (error) => {
-          console.error("Error getting initial user location:", error);
+          console.error('Error getting initial user location:', error);
         },
         { enableHighAccuracy: true }
       );
@@ -34,7 +36,7 @@ export default function MainPage() {
           });
         },
         (error) => {
-          console.error("Error watching user location:", error);
+          console.error('Error watching user location:', error);
         },
         { enableHighAccuracy: true }
       );

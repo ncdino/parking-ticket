@@ -6,6 +6,7 @@ import ParkingCarImg from "@/public/image/parking-icon.png"; // 사용자 위치
 
 export default function MapComponent({ userLocation, setSelectedNote }) {
   const [isKakaoLoaded, setIsKakaoLoaded] = useState(false);
+  const [map, setMap] = useState(null); // 맵 객체를 state로 관리
 
   // TanStack Query로 CSV 파일에서 카메라 데이터 가져오기
   const { data: cameraData = [] } = useQuery({
@@ -44,11 +45,19 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
   }, []);
 
   useEffect(() => {
-    if (isKakaoLoaded && userLocation && cameraData.length > 0) {
+    if (isKakaoLoaded && userLocation && cameraData.length > 0 && !map) {
       // 카카오맵 초기화
       initializeMap();
     }
-  }, [isKakaoLoaded, userLocation, cameraData]);
+  }, [isKakaoLoaded, userLocation, cameraData, map]); // 맵 객체가 존재하지 않을 때만 초기화
+
+  useEffect(() => {
+    if (map && userLocation) {
+      // userLocation이 변경되면 중심점만 업데이트
+      const latLng = new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng);
+      map.setCenter(latLng);
+    }
+  }, [userLocation, map]); // userLocation이 변경될 때마다 실행
 
   const initializeMap = () => {
     const mapContainer = document.getElementById("map");
@@ -56,7 +65,8 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
       center: new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng),
       level: 4, // 지도 줌 레벨
     };
-    const map = new window.kakao.maps.Map(mapContainer, mapOptions);
+    const mapInstance = new window.kakao.maps.Map(mapContainer, mapOptions);
+    setMap(mapInstance); // 맵 객체를 상태로 저장
 
     // 사용자 위치에 마커 설정
     const userMarkerImage = new window.kakao.maps.MarkerImage(
@@ -69,7 +79,7 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
       position: new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng),
       image: userMarkerImage,
     });
-    userMarker.setMap(map);
+    userMarker.setMap(mapInstance);
 
     // 주차단속카메라 데이터를 기반으로 마커 생성
     cameraData.forEach((camera) => {
@@ -82,7 +92,7 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
       if (distance <= 10000) { // 거리 10km 이내에 카메라 마커 추가
         createMarker(
           { lat: camera.latitude, lng: camera.longitude },
-          map,
+          mapInstance,
           camera.parking_violation_note
         );
       }

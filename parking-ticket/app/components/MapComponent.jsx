@@ -22,7 +22,8 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
   });
 
   useEffect(() => {
-    if (userLocation && typeof window !== "undefined") {
+    if (typeof window !== "undefined") {
+      // 카카오맵 API 스크립트 로딩
       const kakaoScript = document.createElement("script");
       kakaoScript.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_API_KEY}&autoload=false`;
       kakaoScript.async = true;
@@ -40,10 +41,11 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
         document.head.removeChild(kakaoScript);
       };
     }
-  }, [userLocation]);
+  }, []);
 
   useEffect(() => {
-    if (isKakaoLoaded && userLocation && window.kakao && window.kakao.maps) {
+    if (isKakaoLoaded && userLocation && cameraData.length > 0) {
+      // 카카오맵 초기화
       initializeMap();
     }
   }, [isKakaoLoaded, userLocation, cameraData]);
@@ -52,7 +54,7 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
     const mapContainer = document.getElementById("map");
     const mapOptions = {
       center: new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng),
-      level: 4,
+      level: 4, // 지도 줌 레벨
     };
     const map = new window.kakao.maps.Map(mapContainer, mapOptions);
 
@@ -64,10 +66,7 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
     );
 
     const userMarker = new window.kakao.maps.Marker({
-      position: new window.kakao.maps.LatLng(
-        userLocation.lat,
-        userLocation.lng
-      ),
+      position: new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng),
       image: userMarkerImage,
     });
     userMarker.setMap(map);
@@ -80,7 +79,7 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
         camera.latitude,
         camera.longitude
       );
-      if (distance <= 10000) {
+      if (distance <= 10000) { // 거리 10km 이내에 카메라 마커 추가
         createMarker(
           { lat: camera.latitude, lng: camera.longitude },
           map,

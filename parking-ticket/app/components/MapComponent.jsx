@@ -25,7 +25,7 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
     if (typeof window !== "undefined") {
       // 카카오맵 API 스크립트 로딩
       const kakaoScript = document.createElement("script");
-      kakaoScript.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_API_KEY}&autoload=false`;
+      kakaoScript.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&autoload=false`;
       kakaoScript.async = true;
       kakaoScript.onload = () => {
         window.kakao.maps.load(() => {

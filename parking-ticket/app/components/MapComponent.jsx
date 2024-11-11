@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Papa from "papaparse"; // CSV 파싱을 위한 라이브러리
@@ -32,6 +32,9 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
         });
       };
       document.head.appendChild(kakaoScript);
+      kakaoScript.onerror = () => {
+        console.error("Failed to load Kakao Maps script.");
+      };
 
       return () => {
         document.head.removeChild(kakaoScript);

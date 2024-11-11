@@ -95,6 +95,8 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
           mapInstance,
           camera.parking_violation_note
         );
+        // 카메라 위치에 200m 원 생성
+        createCircle({ lat: camera.latitude, lng: camera.longitude }, mapInstance);
       }
     });
   };
@@ -113,6 +115,20 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
     window.kakao.maps.event.addListener(marker, "click", () => {
       setSelectedNote(note); // 클릭 시 선택된 카메라 정보 표시
     });
+  };
+
+  // 카메라 위치에 원을 생성하는 함수 (반지름 200m)
+  const createCircle = (position, map) => {
+    const circle = new window.kakao.maps.Circle({
+      center: new window.kakao.maps.LatLng(position.lat, position.lng), // 원의 중심
+      radius: 200, // 반지름 200m
+      strokeWeight: 2, // 원의 테두리 두께
+      strokeColor: "#FF0000", // 원 테두리 색상
+      strokeOpacity: 0.8, // 원 테두리 투명도
+      fillColor: "#FF0000", // 원 내부 색상
+      fillOpacity: 0.2, // 원 내부 투명도
+    });
+    circle.setMap(map); // 원을 지도에 추가
   };
 
   // 거리 계산 함수

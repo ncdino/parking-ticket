@@ -1,9 +1,11 @@
 // components/GeolocationComponent.js
-import { useState, useEffect } from 'react';
+"use client";
+
+import { useEffect } from 'react';
 
 export default function GeolocationComponent({ setUserLocation }) {
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof navigator !== 'undefined') {
       // 첫 위치를 가져옴
       navigator.geolocation.getCurrentPosition(
         (position) => {

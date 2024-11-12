@@ -14,7 +14,6 @@ export default function MainPage() {
 
   return (
     <div>
-      <h1>Nearby Parking Enforcement Cameras</h1>
       <GeolocationComponent setUserLocation={setUserLocation} />
       <MapComponent
         userLocation={userLocation}

@@ -7,6 +7,7 @@ import ParkingCarImg from "@/public/image/parking-icon.png"; // 사용자 위치
 export default function MapComponent({ userLocation, setSelectedNote }) {
   const [isKakaoLoaded, setIsKakaoLoaded] = useState(false);
   const [map, setMap] = useState(null); // 맵 객체를 state로 관리
+  const [userMarker, setUserMarker] = useState(null); // 사용자 위치 마커 상태 추가
 
   // TanStack Query로 CSV 파일에서 카메라 데이터 가져오기
   const { data: cameraData = [] } = useQuery({
@@ -53,9 +54,17 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
 
   useEffect(() => {
     if (map && userLocation) {
-      // userLocation이 변경되면 중심점만 업데이트
+      // userLocation이 변경되면 중심점 업데이트 및 사용자 위치 마커 위치 업데이트
       const latLng = new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng);
       map.setCenter(latLng);
+
+      // 기존 사용자 위치 마커가 있으면 위치 업데이트, 없으면 새로 생성
+      if (userMarker) {
+        userMarker.setPosition(latLng);
+      } else {
+        const newUserMarker = createUserMarker(latLng, map);
+        setUserMarker(newUserMarker);
+      }
     }
   }, [userLocation, map]); // userLocation이 변경될 때마다 실행
 
@@ -69,17 +78,9 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
     setMap(mapInstance); // 맵 객체를 상태로 저장
 
     // 사용자 위치에 마커 설정
-    const userMarkerImage = new window.kakao.maps.MarkerImage(
-      ParkingCarImg.src, // 사용자 위치 마커 이미지 경로
-      new window.kakao.maps.Size(24, 24), // 이미지 크기
-      { offset: new window.kakao.maps.Point(12, 12) } // 이미지 중심점
-    );
-
-    const userMarker = new window.kakao.maps.Marker({
-      position: new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng),
-      image: userMarkerImage,
-    });
-    userMarker.setMap(mapInstance);
+    const initialUserLatLng = new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng);
+    const initialUserMarker = createUserMarker(initialUserLatLng, mapInstance);
+    setUserMarker(initialUserMarker);
 
     // 주차단속카메라 데이터를 기반으로 마커 생성
     cameraData.forEach((camera) => {
@@ -95,10 +96,24 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
           mapInstance,
           camera.parking_violation_note
         );
-        // 카메라 위치에 200m 원 생성
-        createCircle({ lat: camera.latitude, lng: camera.longitude }, mapInstance);
       }
     });
+  };
+
+  // 사용자 위치 마커 생성 함수
+  const createUserMarker = (position, map) => {
+    const userMarkerImage = new window.kakao.maps.MarkerImage(
+      ParkingCarImg.src, // 사용자 위치 마커 이미지 경로
+      new window.kakao.maps.Size(24, 24), // 이미지 크기
+      { offset: new window.kakao.maps.Point(12, 12) } // 이미지 중심점
+    );
+
+    const marker = new window.kakao.maps.Marker({
+      position: position,
+      image: userMarkerImage,
+    });
+    marker.setMap(map);
+    return marker;
   };
 
   // 카메라 위치에 마커를 생성하고 클릭 시 세부 정보를 표시
@@ -112,23 +127,11 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
     });
     marker.setMap(map);
 
+    // 마커 클릭 시 원을 그리도록 설정
     window.kakao.maps.event.addListener(marker, "click", () => {
       setSelectedNote(note); // 클릭 시 선택된 카메라 정보 표시
+      drawCircle(position); // 클릭된 위치에 원 그리기
     });
-  };
-
-  // 카메라 위치에 원을 생성하는 함수 (반지름 200m)
-  const createCircle = (position, map) => {
-    const circle = new window.kakao.maps.Circle({
-      center: new window.kakao.maps.LatLng(position.lat, position.lng), // 원의 중심
-      radius: 200, // 반지름 200m
-      strokeWeight: 2, // 원의 테두리 두께
-      strokeColor: "#FF0000", // 원 테두리 색상
-      strokeOpacity: 0.8, // 원 테두리 투명도
-      fillColor: "#FF0000", // 원 내부 색상
-      fillOpacity: 0.2, // 원 내부 투명도
-    });
-    circle.setMap(map); // 원을 지도에 추가
   };
 
   // 거리 계산 함수
@@ -148,5 +151,25 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
     return R * c; // 미터로 반환
   };
 
-  return <div id="map" style={{ width: "100%", height: "500px" }} />;
+  // 클릭된 위치에 원을 그리는 함수
+  const drawCircle = (position) => {
+    if (map) {
+      const circle = new window.kakao.maps.Circle({
+        center: new window.kakao.maps.LatLng(position.lat, position.lng),
+        radius: 200, // 원 반지름 200m
+        strokeWeight: 2,
+        strokeColor: "#ff0000", // 원 테두리 색
+        strokeOpacity: 1,
+        fillColor: "#ff0000", // 원 내부 색
+        fillOpacity: 0.4,
+      });
+      circle.setMap(map); // 맵에 원을 추가
+    }
+  };
+
+  return (
+    <div>
+      <div id="map" style={{ width: "100%", height: "500px" }} />
+    </div>
+  );
 }

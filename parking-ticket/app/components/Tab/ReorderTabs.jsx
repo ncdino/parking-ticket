@@ -17,7 +17,7 @@ export default function ReorderTabs() {
   const [selectedTab, setSelectedTab] = useState(pages[0].id);
 
   return (
-    <div className="w-full lg:w-1/2 h-full max-w-[100vw] max-h-[100vh] rounded-lg bg-[#f3f3f3] overflow-hidden shadow-xl flex flex-col">
+    <div className="w-full h-full max-w-[100vw] max-h-[100vh] rounded-lg bg-[#f3f3f3] overflow-hidden shadow-xl flex flex-col">
       <nav className="bg-[#fdfdfd] p-2 rounded-t-lg border-b border-gray-200 flex items-center">
         {pages.map((page) => (
           <button

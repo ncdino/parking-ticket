@@ -159,7 +159,7 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
 
   return (
     <div>
-      <div id="map" style={{ width: "100%", height: "500px" }} />
+      <div id="map" className="w-full h-[500px] rounded-2xl"></div>
     </div>
   );
 }

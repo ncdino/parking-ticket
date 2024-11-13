@@ -9,6 +9,7 @@ module.exports = {
     extend: {
       fontFamily: {
         paperlogy: ["var(--font-paperlogy)", "sans-serif"],
+        pretendard: ["var(--font-pretendard)"],
       },
     },
   },

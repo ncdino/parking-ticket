@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
+
+// 알림권한 요청
 const requestNotificationPermission = async () => {
   if (!("Notification" in window)) {
     console.warn("이 브라우저는 알림을 지원하지 않습니다.");
@@ -19,16 +22,28 @@ const triggerNotification = (camera) => {
   if (Notification.permission === "granted") {
     new Notification("근처 알림", {
       body: `${camera.installation_location} 근처에서 10초 이상 머물렀습니다.`,
-      icon: "/notification-icon.png",
+
     });
   }
 };
 
-export default function GeolocationComponent({ setUserLocation, cameraData }) {
+export default function GeolocationComponent({ setUserLocation }) {
   const [closestCamera, setClosestCamera] = useState(null);
   const stayTimerRef = useRef(null);
-  const prevLocationRef = useRef(null);
-  const locationChangeTimeRef = useRef(null);
+
+  const { data: cameraData = [] } = useQuery({
+    queryKey: ["cameraData"],
+    queryFn: async () => {
+      const response = await fetch("/data/camera_output.csv");
+      const csvText = await response.text();
+      const parsedData = Papa.parse(csvText, {
+        header: true,
+        dynamicTyping: true,
+      }).data;
+      return parsedData;
+    },
+    staleTime: Infinity,
+  });
 
   useEffect(() => {
     requestNotificationPermission();
@@ -40,45 +55,20 @@ export default function GeolocationComponent({ setUserLocation, cameraData }) {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           });
-          prevLocationRef.current = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          locationChangeTimeRef.current = Date.now();
         },
         (error) => {
           console.error("Error getting initial user location:", error);
         },
         { enableHighAccuracy: true }
       );
-
       const watchId = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           setUserLocation({ lat: latitude, lng: longitude });
 
-          const currentTime = Date.now();
-          const timeDiff = currentTime - (locationChangeTimeRef.current || 0);
-
-          if (timeDiff > 10000) {
-            const closest = findClosestCamera(latitude, longitude);
-            setClosestCamera(closest);
-            checkProximity(latitude, longitude, closest);
-          }
-
-          locationChangeTimeRef.current = currentTime;
-
-          if (prevLocationRef.current) {
-            const distance = getDistance(
-              latitude,
-              longitude,
-              prevLocationRef.current.lat,
-              prevLocationRef.current.lng
-            );
-            if (distance > 10) { // gps 미세반응 -> 10m
-              prevLocationRef.current = { lat: latitude, lng: longitude };
-            }
-          }
+          const closest = findClosestCamera(latitude, longitude);
+          setClosestCamera(closest);
+          checkProximity(latitude, longitude, closest);
         },
         (error) => {
           console.error("Error watching user location:", error);
@@ -98,7 +88,12 @@ export default function GeolocationComponent({ setUserLocation, cameraData }) {
     let minDistance = Infinity;
 
     cameraData.forEach((camera) => {
-      const distance = getDistance(userLat, userLng, camera.latitude, camera.longitude);
+      const distance = getDistance(
+        userLat,
+        userLng,
+        camera.latitude,
+        camera.longitude
+      );
       if (distance < minDistance) {
         minDistance = distance;
         closest = camera;
@@ -108,19 +103,23 @@ export default function GeolocationComponent({ setUserLocation, cameraData }) {
     return closest;
   };
 
-  // 특정 반경 내 머무는지 확인하는 함수
   const checkProximity = (userLat, userLng, closestCamera) => {
-    const PROXIMITY_RADIUS = 100;
+    const PROXIMITY_RADIUS = 100; 
     const STAY_DURATION = 10000;
 
     if (closestCamera) {
-      const distance = getDistance(userLat, userLng, closestCamera.latitude, closestCamera.longitude);
+      const distance = getDistance(
+        userLat,
+        userLng,
+        closestCamera.latitude,
+        closestCamera.longitude
+      );
 
       if (distance <= PROXIMITY_RADIUS) {
         if (!stayTimerRef.current) {
           stayTimerRef.current = setTimeout(() => {
             triggerNotification(closestCamera);
-            stayTimerRef.current = null;
+            stayTimerRef.current = null; // 초기화
           }, STAY_DURATION);
         }
       } else {

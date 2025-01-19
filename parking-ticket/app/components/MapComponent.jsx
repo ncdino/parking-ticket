@@ -9,7 +9,6 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
   const [map, setMap] = useState(null);
   const [userMarker, setUserMarker] = useState(null);
 
-  // TanStack Query로 CSV 파일에서 카메라 데이터 가져오기
   const { data: cameraData = [] } = useQuery({
     queryKey: ["cameraData"],
     queryFn: async () => {
@@ -46,14 +45,16 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
 
   useEffect(() => {
     if (isKakaoLoaded && userLocation && cameraData.length > 0 && !map) {
-      // 카메라 데이터 로드 완료 후 맵 초기화
       initializeMap();
     }
   }, [isKakaoLoaded, userLocation, cameraData, map]);
 
   useEffect(() => {
     if (map && userLocation) {
-      const latLng = new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng);
+      const latLng = new window.kakao.maps.LatLng(
+        userLocation.lat,
+        userLocation.lng
+      );
       map.setCenter(latLng);
 
       if (userMarker) {
@@ -74,7 +75,10 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
     const mapInstance = new window.kakao.maps.Map(mapContainer, mapOptions);
     setMap(mapInstance);
 
-    const initialUserLatLng = new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng);
+    const initialUserLatLng = new window.kakao.maps.LatLng(
+      userLocation.lat,
+      userLocation.lng
+    );
     const initialUserMarker = createUserMarker(initialUserLatLng, mapInstance);
     setUserMarker(initialUserMarker);
 
@@ -111,7 +115,10 @@ export default function MapComponent({ userLocation, setSelectedNote }) {
   };
 
   const createMarker = (position, map, cameraInfo) => {
-    const markerPosition = new window.kakao.maps.LatLng(position.lat, position.lng);
+    const markerPosition = new window.kakao.maps.LatLng(
+      position.lat,
+      position.lng
+    );
     const marker = new window.kakao.maps.Marker({
       position: markerPosition,
     });

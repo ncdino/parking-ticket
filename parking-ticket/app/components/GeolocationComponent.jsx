@@ -22,7 +22,7 @@ const triggerNotification = (camera) => {
   if (Notification.permission === "granted") {
     new Notification("근처 알림", {
       body: `${camera.installation_location} 근처에서 10초 이상 머물렀습니다.`,
-      icon: "/notification-icon.png",
+
     });
   }
 };
@@ -104,7 +104,7 @@ export default function GeolocationComponent({ setUserLocation }) {
   };
 
   const checkProximity = (userLat, userLng, closestCamera) => {
-    const PROXIMITY_RADIUS = 20; 
+    const PROXIMITY_RADIUS = 100; 
     const STAY_DURATION = 10000;
 
     if (closestCamera) {
